@@ -142,7 +142,7 @@ myra -s <source.myra> [options]
 | Flag | Description |
 |------|-------------|
 | `-s <file>` | Source file to compile |
-| `-o <dir>` | Output directory (default: current directory) |
+| `-o <dir>` | Output directory (default: `output` in current directory) |
 | `-r` | Compile and run the resulting executable |
 | `-d` | Compile and launch the debugger |
 | `-h` | Show help |
