@@ -106,7 +106,7 @@ The full language reference and compiler internals documentation live in the `do
 
 | Document | Description |
 |----------|-------------|
-| **[Myra Language Reference](docs/Myra.md)** | Complete language tour with examples: routines, records, objects, choices, arrays, sets, strings, control flow, exceptions, memory management, pointers, overlays, variadics, modules, FFI, C++ interop, directives, intrinsics, test blocks, and the full BNF grammar. |
+| **[Myra Language Reference](docs/MYRA.md)** | Complete language tour with examples: routines, records, objects, choices, arrays, sets, strings, control flow, exceptions, memory management, pointers, overlays, variadics, modules, FFI, C++ interop, directives, intrinsics, test blocks, and the full BNF grammar. |
 | **[MLD Reference Manual](docs/MLD.md)** | The `.mld` meta-language that defines Myra. Covers tokens, types, grammar rules, semantics, emitters, the imperative language, built-in functions, and the formal EBNF grammar. Read this to understand how the compiler works and how to hack it. |
 
 
