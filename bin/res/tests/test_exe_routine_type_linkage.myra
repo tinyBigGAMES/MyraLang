@@ -1,0 +1,85 @@
+﻿/*===============================================================================
+  Myra™ - Pascal. Refined.
+
+  Copyright © 2025-present tinyBigGAMES™ LLC
+  All Rights Reserved.
+
+  https://myralang.org
+
+  See LICENSE for license information
+==============================================================================*/
+
+/* EXPECT: === Routine Type Linkage Test ===
+--- C++ Linkage (Default) ---
+TIntFunc callback: 30
+--- C Linkage ---
+TCCallback result: 200
+TEventHandler result: 42
+--- Mixed Usage ---
+All tests passed!
+=== DONE === */
+
+module exe test_exe_routine_type_linkage;
+
+type
+  // C++ linkage routine type (default) - for Myra/C++ callbacks
+  TIntFunc = routine(const a: int32; const b: int32): int32;
+  
+  // C linkage routine types - for C library callbacks
+  TCCallback = routine clink (const x: int32): int32;
+  TEventHandler = routine clink (const code: int32; const data: pointer): int32;
+
+var
+  // C++ linkage variables
+  mathOp: TIntFunc;
+  
+  // C linkage variables
+  cCallback: TCCallback;
+  eventHandler: TEventHandler;
+
+// C++ linkage routine (default)
+routine Add(const a: int32; const b: int32): int32;
+begin
+  return a + b;
+end;
+
+// C linkage routines - match the C linkage types
+routine clink DoubleValue(const x: int32): int32;
+begin
+  return x * 2;
+end;
+
+routine clink HandleEvent(const code: int32; const data: pointer): int32;
+begin
+  // Just return the code for testing
+  return code;
+end;
+
+begin
+  println("=== Routine Type Linkage Test ===");
+  
+  // Test C++ linkage routine type
+  println("--- C++ Linkage (Default) ---");
+  mathOp := Add;
+  println("TIntFunc callback: {}", mathOp(10, 20));
+  
+  // Test C linkage routine types
+  println("--- C Linkage ---");
+  cCallback := DoubleValue;
+  println("TCCallback result: {}", cCallback(100));
+  
+  eventHandler := HandleEvent;
+  println("TEventHandler result: {}", eventHandler(42, nil));
+  
+  // Test that assignments work correctly
+  println("--- Mixed Usage ---");
+  if mathOp(5, 5) = 10 then
+    if cCallback(25) = 50 then
+      if eventHandler(99, nil) = 99 then
+        println("All tests passed!");
+      end;
+    end;
+  end;
+  
+  println("=== DONE ===");
+end.

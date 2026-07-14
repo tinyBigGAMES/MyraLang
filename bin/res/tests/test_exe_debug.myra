@@ -1,0 +1,41 @@
+/*===============================================================================
+  Myra™ - Pascal. Refined.
+
+  Copyright © 2025-present tinyBigGAMES™ LLC
+  All Rights Reserved.
+
+  https://myralang.org
+
+  See LICENSE for license information
+==============================================================================*/
+
+/* Debug test: two breakpoints - one in routine, one in main */
+
+/* EXITCODE: 0 */
+
+/* EXPECT: Debug test starting...
+The answer is: 42
+Debug test complete. */
+
+module exe test_exe_debug;
+
+var
+  LValue: int32;
+
+routine ComputeAnswer(): int32;
+var
+  LResult: int32;
+begin
+  LResult := 40;
+  @breakpoint;
+  LResult := LResult + 2;
+  return LResult;
+end;
+
+begin
+  println("Debug test starting...");
+  @breakpoint;
+  LValue := ComputeAnswer();
+  println("The answer is: {}", LValue);
+  println("Debug test complete.");
+end.

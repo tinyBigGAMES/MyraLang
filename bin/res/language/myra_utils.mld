@@ -1,0 +1,121 @@
+// =========================================================================
+//  Myra™ - Pascal. Refined.
+//  Copyright © 2025-present tinyBigGAMES™ LLC
+//  https://myralang.org
+//  ------------------------------------------------------------------------
+//  myra_utils.mld -- Shared, reusable routines for the Myra
+//
+//  General-purpose helpers that are not tied to one grammar rule or one
+//  emitter. Anything reused across handlers belongs here.
+//
+//  This file is HAND-WRITTEN. The target tag DATA it consumes (the ARCH_*,
+//  OS_* and ABI_* constants and the isValidArch / isValidOS / isValidAbi
+//  routines) is GENERATED into myra_targets.mld -- do not duplicate tags here.
+// =========================================================================
+
+// -------------------------------------------------------------------------
+//  Target aliases -- THE documented surface
+// -------------------------------------------------------------------------
+
+// The curated alias vocabulary (win64, winarm64, linux64, linuxarm64,
+// macos64, wasm32) is resolved by the HOST, not here. See MYR_TARGET_ALIASES
+// in Myra.Build -- the builtin setTargetAlias(name) resolves a name to a full
+// Zig triple and sets it, returning false when the name is neither a known
+// alias nor a raw triple. Target resolution belongs where the toolchain is
+// driven from.
+
+// Apply an @target directive node: resolve it and set the build platform.
+//
+// Called from the module emitter's PRE-SCAN, not from the directive's own
+// handler, so that the target is established before ANY code is emitted.
+// Emitters downstream depend on this: getPlatform() must already be correct
+// when a guard/except is reached, wherever it appears in the module.
+routine applyTarget(nd: node) {
+  let tr = getAttr(nd, "triple");
+  if tr != "" {
+    // @target "win64";  -- a curated name, or (undocumented) a raw triple.
+    // The alias vocabulary lives in the host (Myra.Build), not here.
+    if not setTargetAlias(tr) {
+      errorAt(nd, "unknown target '" + tr +
+        "'. Supported: win64, winarm64, linux64, linuxarm64, macos64, wasm32");
+    }
+  } else {
+    // @target x86_64, windows, gnu;  -- undocumented component form.
+    let a = getAttr(nd, "arch");
+    let o = getAttr(nd, "os");
+    let b = getAttr(nd, "abi");
+    validateTriple(nd, a, o, b);
+    setPlatform(buildTriple(a, o, b));
+  }
+}
+
+// -------------------------------------------------------------------------
+//  Target capabilities
+// -------------------------------------------------------------------------
+
+// True when the current target is WebAssembly.
+routine targetIsWasm() -> bool {
+  return startsWith(getPlatform(), "wasm");
+}
+
+// Reject a construct the current target's toolchain cannot support.
+//
+// WebAssembly has no exception handling: Zig's libcxxabi provides no
+// __cxa_throw for wasm, and wasi-libc's setjmp/longjmp needs the
+// unstandardized EH proposal (it fails to link on __c_longjmp). Both routes
+// are closed, so wasm is compiled -fno-exceptions and any C++ try/catch is a
+// hard compile error. Catch it here, in Myra, with a source location -- rather
+// than letting Clang complain about generated code the user never wrote.
+routine requireExceptions(nd: node, what: string) {
+  if targetIsWasm() {
+    errorAt(nd, what + " is not supported on the wasm32 target: WebAssembly " +
+      "has no exception handling. Remove it, or build for a native target.");
+  }
+}
+
+// -------------------------------------------------------------------------
+//  Target triples
+// -------------------------------------------------------------------------
+
+// Consume one target component and return its text.
+//
+// A component is written either as a bare identifier (x86_64, windows, gnu)
+// or as a string when the tag is not a legal identifier. The only tag in the
+// current toolchain that needs the string form is the "3ds" OS, which starts
+// with a digit and therefore cannot lex as an identifier.
+//
+// String tokens arrive already unquoted, so both forms yield the raw tag.
+routine targetComponent() -> string {
+  let t = currentText();
+  advance();
+  return t;
+}
+
+// Join target components into a Zig/Clang triple.
+// The ABI is optional; when empty the triple is just arch-os.
+routine buildTriple(arch: string, os: string, abi: string) -> string {
+  if abi == "" {
+    return arch + "-" + os;
+  }
+  return arch + "-" + os + "-" + abi;
+}
+
+// Validate each component of a target triple against the tags the bundled
+// toolchain actually accepts, raising a located error on the offending node.
+//
+// Without this, a typo sails through to Zig and surfaces as a Zig error about
+// a triple the user never typed. Each component is checked independently so a
+// single mistake is reported precisely.
+routine validateTriple(nd: node, arch: string, os: string, abi: string) {
+  if not isValidArch(arch) {
+    errorAt(nd, "unknown target architecture '" + arch + "'");
+  }
+  if not isValidOS(os) {
+    errorAt(nd, "unknown target operating system '" + os + "'");
+  }
+  if abi != "" {
+    if not isValidAbi(abi) {
+      errorAt(nd, "unknown target ABI '" + abi + "'");
+    }
+  }
+}

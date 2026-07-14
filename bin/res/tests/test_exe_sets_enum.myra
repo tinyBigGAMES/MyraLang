@@ -1,0 +1,167 @@
+/*===============================================================================
+  Myra™ - Pascal. Refined.
+
+  Copyright © 2025-present tinyBigGAMES™ LLC
+  All Rights Reserved.
+
+  https://myralang.org
+
+  See LICENSE for license information
+==============================================================================*/
+
+/* EXPECT: Testing set of enum...
+Red in colors: true
+Blue in colors: true
+Green in colors: false
+Yellow in colors: false
+After adding Green: true
+Colors equal: true
+Union has all: true true true true
+Intersection: true false
+Difference: true false
+Testing enum with gaps...
+A in sparse: true
+C in sparse: true
+B in sparse: false
+Done */
+
+module exe test_exe_sets_enum;
+
+type
+  Color = choices(Red, Green, Blue, Yellow);
+  SparseEnum = choices(A = 0, B = 5, C = 10);
+
+var
+  colors: set of Color;
+  colors2: set of Color;
+  colors3: set of Color;
+  sparse: set of SparseEnum;
+
+begin
+  println("Testing set of enum...");
+  
+  // Basic enum set
+  colors := [Red, Blue];
+  
+  if Red in colors then
+    println("Red in colors: true");
+  else
+    println("Red in colors: false");
+  end;
+  
+  if Blue in colors then
+    println("Blue in colors: true");
+  else
+    println("Blue in colors: false");
+  end;
+  
+  if Green in colors then
+    println("Green in colors: true");
+  else
+    println("Green in colors: false");
+  end;
+  
+  if Yellow in colors then
+    println("Yellow in colors: true");
+  else
+    println("Yellow in colors: false");
+  end;
+  
+  // Add element
+  colors := colors + [Green];
+  if Green in colors then
+    println("After adding Green: true");
+  else
+    println("After adding Green: false");
+  end;
+  
+  // Equality
+  colors2 := [Red, Green, Blue];
+  if colors = colors2 then
+    println("Colors equal: true");
+  else
+    println("Colors equal: false");
+  end;
+  
+  // Union
+  colors := [Red, Green];
+  colors2 := [Blue, Yellow];
+  colors3 := colors + colors2;
+  
+  if Red in colors3 then
+    print("Union has all: true");
+  else
+    print("Union has all: false");
+  end;
+  if Green in colors3 then
+    print(" true");
+  else
+    print(" false");
+  end;
+  if Blue in colors3 then
+    print(" true");
+  else
+    print(" false");
+  end;
+  if Yellow in colors3 then
+    println(" true");
+  else
+    println(" false");
+  end;
+  
+  // Intersection
+  colors := [Red, Green, Blue];
+  colors2 := [Green, Yellow];
+  colors3 := colors * colors2;
+  
+  if Green in colors3 then
+    print("Intersection: true");
+  else
+    print("Intersection: false");
+  end;
+  if Red in colors3 then
+    println(" true");
+  else
+    println(" false");
+  end;
+  
+  // Difference
+  colors := [Red, Green, Blue];
+  colors2 := [Green];
+  colors3 := colors - colors2;
+  
+  if Red in colors3 then
+    print("Difference: true");
+  else
+    print("Difference: false");
+  end;
+  if Green in colors3 then
+    println(" true");
+  else
+    println(" false");
+  end;
+  
+  // Enum with gaps
+  println("Testing enum with gaps...");
+  sparse := [A, C];
+  
+  if A in sparse then
+    println("A in sparse: true");
+  else
+    println("A in sparse: false");
+  end;
+  
+  if C in sparse then
+    println("C in sparse: true");
+  else
+    println("C in sparse: false");
+  end;
+  
+  if B in sparse then
+    println("B in sparse: true");
+  else
+    println("B in sparse: false");
+  end;
+  
+  println("Done");
+end.

@@ -1,0 +1,76 @@
+/*===============================================================================
+  Myra™ - Pascal. Refined.
+
+  Copyright © 2025-present tinyBigGAMES™ LLC
+  All Rights Reserved.
+
+  https://myralang.org
+
+  See LICENSE for license information
+==============================================================================*/
+
+/* EXPECT: Testing constants and enums...
+INT_CONST: 42
+NEG_CONST: -10
+Enum variable c = 0
+c is Red: true
+c is Blue: false
+After c := Blue, c = 2
+c is Blue: true
+c is Red: false
+Done */
+
+module exe test_exe_constants_enums;
+
+const
+  INT_CONST = 42;
+  NEG_CONST = -10;
+
+type
+  Color = choices(Red, Green, Blue);
+
+var
+  c: Color;
+
+begin
+  println("Testing constants and enums...");
+  
+  // Test integer constants
+  println("INT_CONST: {}", INT_CONST);
+  println("NEG_CONST: {}", NEG_CONST);
+  
+  // Test enum variable assignment
+  c := Red;
+  println("Enum variable c = {}", int32(c));
+  
+  // Test enum comparison
+  if c = Red then
+    println("c is Red: true");
+  else
+    println("c is Red: false");
+  end;
+  
+  if c = Blue then
+    println("c is Blue: true");
+  else
+    println("c is Blue: false");
+  end;
+  
+  // Test reassignment
+  c := Blue;
+  println("After c := Blue, c = {}", int32(c));
+  
+  if c = Blue then
+    println("c is Blue: true");
+  else
+    println("c is Blue: false");
+  end;
+  
+  if c = Red then
+    println("c is Red: true");
+  else
+    println("c is Red: false");
+  end;
+  
+  println("Done");
+end.

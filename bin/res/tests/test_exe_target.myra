@@ -1,0 +1,97 @@
+﻿/*===============================================================================
+  Myra™ - Pascal. Refined.
+
+  Copyright © 2025-present tinyBigGAMES™ LLC
+  All Rights Reserved.
+
+  https://myralang.org
+
+  See LICENSE for license information
+==============================================================================*/
+
+/* Demonstrates the two DIFFERENT conditional systems:
+
+     @ifdef  -- MYRA-level. Resolved by the Myra lexer, BEFORE the compiler.
+                Backed by Myra's own define table (setDefine in the langdef).
+
+     #if     -- C++ PASSTHROUGH. Resolved by the C++ preprocessor, AFTER the
+                compiler. Reads the macros the toolchain defines for whichever
+                target Zig was pointed at.
+
+   Platform detection belongs to #if. @target selects the toolchain target;
+   the compiler then supplies the platform macros for it. Myra does not
+   maintain a hand-written platform define list -- with 60 arches and 45
+   operating systems that would be a lie waiting to happen.
+*/
+
+/* EXPECT: === Target Directive Test (win64) ===
+MYRA defined: yes
+_WIN32 defined: yes
+_WIN64 defined: yes
+__x86_64__ defined: yes
+__linux__ defined: no
+__APPLE__ defined: no
+__unix__ defined: no
+__wasm__ defined: no
+=== DONE === */
+
+module exe test_exe_target;
+
+@target "win64";
+
+begin
+  println("=== Target Directive Test (win64) ===");
+
+// Myra-level define, set by the langdef. Not a C++ macro.
+@ifdef MYRA
+  println("MYRA defined: yes");
+@else
+  println("MYRA defined: no");
+@endif
+
+// Everything below is C++ passthrough: the compiler defines these for the
+// selected target.
+#if defined(_WIN32)
+  println("_WIN32 defined: yes");
+#else
+  println("_WIN32 defined: no");
+#endif
+
+#if defined(_WIN64)
+  println("_WIN64 defined: yes");
+#else
+  println("_WIN64 defined: no");
+#endif
+
+#if defined(__x86_64__)
+  println("__x86_64__ defined: yes");
+#else
+  println("__x86_64__ defined: no");
+#endif
+
+#if defined(__linux__)
+  println("__linux__ defined: yes");
+#else
+  println("__linux__ defined: no");
+#endif
+
+#if defined(__APPLE__)
+  println("__APPLE__ defined: yes");
+#else
+  println("__APPLE__ defined: no");
+#endif
+
+#if defined(__unix__)
+  println("__unix__ defined: yes");
+#else
+  println("__unix__ defined: no");
+#endif
+
+#if defined(__wasm__)
+  println("__wasm__ defined: yes");
+#else
+  println("__wasm__ defined: no");
+#endif
+
+  println("=== DONE ===");
+end.

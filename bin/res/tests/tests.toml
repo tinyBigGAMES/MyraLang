@@ -1,0 +1,196 @@
+﻿[[test]]
+index = 0
+name = "test_exe_hello"
+
+[[test]]
+index = 1
+name = "test_exe_variables"
+
+[[test]]
+index = 2
+name = "test_exe_vars"
+
+[[test]]
+index = 3
+name = "test_exe_assign"
+
+[[test]]
+index = 4
+name = "test_exe_consts"
+
+[[test]]
+index = 5
+name = "test_exe_constants_enums"
+
+[[test]]
+index = 6
+name = "test_exe_types"
+
+[[test]]
+index = 7
+name = "test_exe_math"
+
+[[test]]
+index = 50
+name = "test_exe_ifelse"
+
+[[test]]
+index = 51
+name = "test_exe_conditional"
+
+[[test]]
+index = 52
+name = "test_exe_control_flow"
+
+[[test]]
+index = 53
+name = "test_exe_loops"
+
+[[test]]
+index = 54
+name = "test_exe_match"
+
+[[test]]
+index = 100
+name = "test_exe_routines"
+
+[[test]]
+index = 101
+name = "test_exe_variadic_routines"
+
+[[test]]
+index = 102
+name = "test_exe_routine_type_linkage"
+
+[[test]]
+index = 103
+name = "test_exe_intrinsics"
+
+[[test]]
+index = 150
+name = "test_exe_arrays"
+
+[[test]]
+index = 151
+name = "test_exe_dynamic_arrays"
+
+[[test]]
+index = 152
+name = "test_exe_records"
+
+[[test]]
+index = 153
+name = "test_exe_pointers"
+
+[[test]]
+index = 154
+name = "test_exe_strings"
+
+[[test]]
+index = 155
+name = "test_exe_strings_full"
+
+[[test]]
+index = 156
+name = "test_exe_sets"
+
+[[test]]
+index = 157
+name = "test_exe_sets_enum"
+
+[[test]]
+index = 158
+name = "test_exe_sets_sizes"
+
+[[test]]
+index = 159
+name = "test_exe_classes"
+
+[[test]]
+index = 200
+name = "test_exe_memory"
+
+[[test]]
+index = 201
+name = "test_exe_new_dispose"
+
+[[test]]
+index = 202
+name = "test_exe_new_dispose_managed"
+
+[[test]]
+index = 203
+name = "test_exe_setlength_shrink_managed"
+
+[[test]]
+index = 250
+name = "test_exe_exceptions"
+
+[[test]]
+index = 251
+name = "test_exe_exception_scope"
+
+[[test]]
+index = 300
+name = "test_exe_import"
+
+[[test]]
+index = 301
+name = "test_exe_std"
+
+[[test]]
+index = 350
+name = "test_exe_usedll"
+deps = [
+  "test_dll_exports"
+]
+
+[[test]]
+index = 351
+name = "test_exe_uselib"
+deps = [
+  "test_lib_utils"
+]
+
+[[test]]
+index = 400
+name = "test_exe_mixedmode"
+
+[[test]]
+index = 401
+name = "test_exe_target"
+
+[[test]]
+index = 402
+name = "test_exe_verinfo"
+
+[[test]]
+index = 403
+name = "test_exe_debug"
+run_mode = "debug"
+
+[[test]]
+index = 404
+name = "test_exe_unittest"
+
+[[test]]
+index = 450
+name = "test_exe_raylib"
+
+[[test]]
+index = 451
+name = "test_exe_raylib"
+define = "STATIC"
+define_value = "1"
+
+[[test]]
+index = 500
+name = "test_exe_sdl3"
+
+[[test]]
+index = 501
+name = "test_exe_sdl3_image"
+
+[[test]]
+index = 502
+name = "test_exe_sdl3_mixer"

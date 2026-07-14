@@ -1,0 +1,83 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>__MYRA_WASM_MODULE__</title>
+<style>
+  body { background:#1e1e1e; color:#d4d4d4; margin:0; padding:16px;
+         font-family:Consolas,"Courier New",monospace; }
+  h1  { font-size:13px; font-weight:normal; color:#808080; margin:0 0 12px 0; }
+  pre { white-space:pre-wrap; word-break:break-word; margin:0;
+        font-size:13px; line-height:1.45; }
+  #err  { color:#f48771; }
+  #exit { margin-top:12px; font-size:12px; color:#808080; }
+</style>
+</head>
+<body>
+<h1>__MYRA_WASM_MODULE__</h1>
+<pre id="out"></pre>
+<pre id="err"></pre>
+<div id="exit">running...</div>
+
+<!--
+  Vendored WASI preview1 shim (@bjorn3/browser_wasi_shim, MIT OR Apache-2.0),
+  converted to a classic script It exposes the global WasiShim.
+
+  Everything is INLINED and there are NO ES modules anywhere in this file, on
+  purpose. Over file:// a browser treats the page as a unique security origin:
+  it cannot fetch() the .wasm, and it cannot load a module script -- not even
+  an inline one. A classic script with the module bytes embedded as base64 is
+  the only shape that runs by double-click, with no web server.
+-->
+<script>
+__MYRA_WASI_SHIM__
+</script>
+
+<script>
+(function () {
+  var out  = document.getElementById("out");
+  var err  = document.getElementById("err");
+  var exit = document.getElementById("exit");
+
+  // Pull the shim's public types off the global exposed by the script above.
+  var WASI          = WasiShim.WASI;
+  var OpenFile      = WasiShim.OpenFile;
+  var File          = WasiShim.File;
+  var ConsoleStdout = WasiShim.ConsoleStdout;
+
+  // Decode the embedded module. Base64 -> bytes.
+  function decodeModule(b64) {
+    var bin = atob(b64);
+    var bytes = new Uint8Array(bin.length);
+    for (var i = 0; i < bin.length; i++)
+      bytes[i] = bin.charCodeAt(i);
+    return bytes;
+  }
+
+  // stdin is an empty file; stdout and stderr are line-buffered into the page.
+  var fds = [
+    new OpenFile(new File([])),
+    ConsoleStdout.lineBuffered(function (line) { out.textContent += line + "\n"; }),
+    ConsoleStdout.lineBuffered(function (line) { err.textContent += line + "\n"; })
+  ];
+
+  // argv[0] is the module name, matching what a WASI CLI host passes.
+  var wasi = new WASI(["__MYRA_WASM_MODULE__"], [], fds);
+
+  var bytes = decodeModule("__MYRA_WASM_BASE64__");
+
+  // instantiate (not instantiateStreaming) -- there is no HTTP response here.
+  WebAssembly.instantiate(bytes, {
+    wasi_snapshot_preview1: wasi.wasiImport
+  }).then(function (result) {
+    // start() runs _start and returns the code passed to proc_exit.
+    var code = wasi.start(result.instance);
+    exit.textContent = "exit code: " + code;
+  }).catch(function (e) {
+    err.textContent += String(e && e.stack ? e.stack : e) + "\n";
+    exit.textContent = "failed";
+  });
+})();
+</script>
+</body>
+</html>

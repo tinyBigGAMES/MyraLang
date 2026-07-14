@@ -1,0 +1,61 @@
+/*===============================================================================
+  Myra™ - Pascal. Refined.
+
+  Copyright © 2025-present tinyBigGAMES™ LLC
+  All Rights Reserved.
+
+  https://myralang.org
+
+  See LICENSE for license information
+==============================================================================*/
+
+/* EXPECT: Allocated 100 bytes
+Value at offset 0: 42
+Value at offset 50: 99
+Resized to 200 bytes
+Value preserved: 42
+Offset 50 preserved: 99
+Memory freed
+Done */
+
+module exe test_exe_memory;
+
+var
+  p: pointer;
+  pb: pointer to int8;
+
+begin
+  // Test getmem
+  p := getmem(100);
+  println("Allocated 100 bytes");
+
+  // Write a known value at offset 0
+  pb := pointer to int8(p);
+  pb^ := 42;
+  println("Value at offset 0: {}", pb^);
+
+  // Write a different value at offset 50 (pointer arithmetic)
+  pb := pointer to int8(p) + 50;
+  pb^ := 99;
+  println("Value at offset 50: {}", pb^);
+
+  // Test resizemem
+  p := resizemem(p, 200);
+  println("Resized to 200 bytes");
+
+  // Read both offsets back WITHOUT rewriting -- this is what proves resize
+  // preserved the contents. Do NOT assign to pb^ here: writing then reading
+  // the same value would pass even if resizemem returned a fresh, zeroed or
+  // garbage block.
+  pb := pointer to int8(p);
+  println("Value preserved: {}", pb^);
+
+  pb := pointer to int8(p) + 50;
+  println("Offset 50 preserved: {}", pb^);
+
+  // Test freemem
+  freemem(p);
+  println("Memory freed");
+
+  println("Done");
+end.

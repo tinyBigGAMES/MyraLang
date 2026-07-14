@@ -1,0 +1,140 @@
+/*===============================================================================
+  Myra™ - Pascal. Refined.
+
+  Copyright © 2025-present tinyBigGAMES™ LLC
+  All Rights Reserved.
+
+  https://myralang.org
+
+  See LICENSE for license information
+==============================================================================*/
+
+/* EXPECT: === String Concatenation ===
+s1 + s2 = Hello World
+s1 + literal = Hello Pax
+literal + s1 = Hi Hello
+s1 + char = Hello!
+char + s1 = !Hello
+=== WString Concatenation ===
+ws1 + ws2 = Wide World
+ws1 + literal = Wide Pax
+literal + ws1 = Hi Wide
+=== String Length ===
+len(Hello) = 5
+len(empty) = 0
+len(Wide!) = 5
+len(wempty) = 0
+=== String Comparison ===
+abc = abc: true
+abc <> abd: true
+abc < abd: true
+abd > abc: true
+abc <= abc: true
+abd >= abc: true
+=== WString Comparison ===
+wabc = wabc: true
+wabc <> wabd: true
+wabc < wabd: true
+=== Done === */
+
+module exe test_exe_strings_full;
+
+var
+  s1: string;
+  s2: string;
+  s3: string;
+  ws1: wstring;
+  ws2: wstring;
+  ws3: wstring;
+  c: char;
+  n: int64;
+
+begin
+  println("=== String Concatenation ===");
+
+  /* string + string */
+  s1 := "Hello";
+  s2 := " World";
+  s3 := s1 + s2;
+  println("s1 + s2 = {}", s3);
+
+  /* string + literal */
+  s3 := s1 + " Pax";
+  println("s1 + literal = {}", s3);
+
+  /* literal + string */
+  s3 := "Hi " + s1;
+  println("literal + s1 = {}", s3);
+
+  /* string + char */
+  c := '!';
+  s3 := s1 + c;
+  println("s1 + char = {}", s3);
+
+  /* char + string */
+  s3 := c + s1;
+  println("char + s1 = {}", s3);
+
+  println("=== WString Concatenation ===");
+
+  /* wstring + wstring */
+  ws1 := w"Wide";
+  ws2 := w" World";
+  ws3 := ws1 + ws2;
+  println("ws1 + ws2 = {}", utf8(ws3));
+
+  /* wstring + literal */
+  ws3 := ws1 + w" Pax";
+  println("ws1 + literal = {}", utf8(ws3));
+
+  /* literal + wstring */
+  ws3 := w"Hi " + ws1;
+  println("literal + ws1 = {}", utf8(ws3));
+
+  println("=== String Length ===");
+
+  /* len(string) */
+  s1 := "Hello";
+  n := len(s1);
+  println("len(Hello) = {}", n);
+
+  /* len(empty string) */
+  s1 := "";
+  n := len(s1);
+  println("len(empty) = {}", n);
+
+  /* len(wstring) */
+  ws1 := w"Wide!";
+  n := len(ws1);
+  println("len(Wide!) = {}", n);
+
+  /* len(empty wstring) */
+  ws1 := w"";
+  n := len(ws1);
+  println("len(wempty) = {}", n);
+
+  println("=== String Comparison ===");
+
+  s1 := "abc";
+  s2 := "abc";
+  s3 := "abd";
+
+  if s1 = s2 then println("abc = abc: true") end;
+  if s1 <> s3 then println("abc <> abd: true") end;
+  if s1 < s3 then println("abc < abd: true") end;
+  if s3 > s1 then println("abd > abc: true") end;
+  if s1 <= s2 then println("abc <= abc: true") end;
+  if s3 >= s1 then println("abd >= abc: true") end;
+
+  println("=== WString Comparison ===");
+
+  ws1 := w"abc";
+  ws2 := w"abc";
+  ws3 := w"abd";
+
+  if ws1 = ws2 then println("wabc = wabc: true") end;
+  if ws1 <> ws3 then println("wabc <> wabd: true") end;
+  if ws1 < ws3 then println("wabc < wabd: true") end;
+
+  println("=== Done ===");
+end.

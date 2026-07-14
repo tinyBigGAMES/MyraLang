@@ -1,0 +1,28 @@
+{===============================================================================
+  Myra™ - Pascal. Refined.
+
+  Copyright © 2025-present tinyBigGAMES™ LLC
+  All Rights Reserved.
+
+  https://myralang.org
+
+  See LICENSE for license information
+
+ -------------------------------------------------------------------------------
+
+  Myra.Build.Targets - Supported target architectures, OSes, and ABIs.
+
+  String constants for every architecture, operating system, and ABI that the
+  bundled Zig/Clang toolchain supports. Use them with SetTarget to compose a
+  target triple without memorizing exact tag spellings, e.g.
+  SetTarget(ARCH_X86_64, OS_WINDOWS, ABI_MSVC). Raw triple strings work too;
+  these constants are convenience and typo-safety, not a limit on what Zig
+  accepts.
+
+  GENERATED FILE - DO NOT EDIT BY HAND.
+  Regenerate with: python src\targets\gen_targets.py
+  (re-parses src\targets\targets.txt, the `zig targets` dump, and re-emits
+  this unit).
+
+  Dependencies: none
+===============================================================================}

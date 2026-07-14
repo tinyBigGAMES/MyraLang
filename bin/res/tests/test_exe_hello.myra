@@ -1,0 +1,23 @@
+﻿/*===============================================================================
+  Myra™ - Pascal. Refined.
+
+  Copyright © 2025-present tinyBigGAMES™ LLC
+  All Rights Reserved.
+
+  https://myralang.org
+
+  See LICENSE for license information
+==============================================================================*/
+
+/* EXPECT: Hello from Myra! */
+
+module exe test_exe_hello;
+
+// Tester-guided test: no @target. The tester drives the target, and the
+// registration's platform list decides which targets it runs on.
+//@target "wasm32";
+
+
+begin
+  println("Hello from Myra!");
+end.

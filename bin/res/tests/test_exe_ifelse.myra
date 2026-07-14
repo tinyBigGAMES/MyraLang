@@ -1,0 +1,46 @@
+/*===============================================================================
+  Myra™ - Pascal. Refined.
+
+  Copyright © 2025-present tinyBigGAMES™ LLC
+  All Rights Reserved.
+
+  https://myralang.org
+
+  See LICENSE for license information
+==============================================================================*/
+
+/* EXPECT:
+small
+the answer
+positive
+*/
+
+// test_exe_ifelse — If/then/else control flow
+module exe test_exe_ifelse;
+
+var
+  x: int32;
+
+begin
+  x := 42;
+
+  if x > 100 then
+    println("big");
+  else
+    println("small");
+  end;
+
+  if x = 42 then
+    println("the answer");
+  end;
+
+  if x < 0 then
+    println("negative");
+  else
+    if x = 0 then
+      println("zero");
+    else
+      println("positive");
+    end;
+  end;
+end.

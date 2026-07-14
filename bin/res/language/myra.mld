@@ -1,0 +1,63 @@
+// ===========================================================================
+//  Myra™ - Pascal. Refined.
+//  Copyright © 2025-present tinyBigGAMES™ LLC
+//  https://myralang.org
+//  ------------------------------------------------------------------------
+//  Myra.mld -- Myra language definition
+//
+//  Defines the Myra systems programming language that compiles to C++23.
+//  Pascal/Oberon-inspired syntax with seamless C++ interop.
+//
+//  C++ passthrough (keywords, operators, preprocessor, blocks) is provided
+//  automatically by the Metamorf engine via ConfigCpp -- this file only
+//  defines Myra's own grammar.
+//
+//  Modular split:
+//    Myra_targets.mld     Target arch/os/abi tags (GENERATED - do not edit)
+//    Myra_utils.mld       Shared reusable routines
+//    Myra_tokens.mld      Token declarations and type system
+//    Myra_helpers.mld     Shared routines and fragments
+//    Myra_grammar.mld     All grammar rules (prefix, infix, statement)
+//    Myra_semantics.mld   Semantic analysis with overload detection
+//    Myra_emitters.mld    Code generation with multi-pass output
+//
+// ===========================================================================
+
+// language declaration
+language Myra version "1.0";
+
+// language options
+const {
+  ENABLE_OVERLOADS = true;
+  ENABLE_FORWARD_REFS = true;
+}
+
+// defines
+setDefine("MYRA");
+
+// source file extension
+// Declared at top level so SETUP populates it. The engine reads it back off
+// the interpreter instance and it drives BOTH the entry source file and
+// import/module resolution. This must not live inside a handler -- consumers
+// like the LSP need it before any source is read or any import is seen.
+setModuleExtension("myra");
+
+// std -- the standard library is part of the language and is ALWAYS present,
+// so the langdef owns its module path.
+//
+// VENDOR LIBRARIES ARE DELIBERATELY ABSENT. raylib, sdl3 and anything else
+// under res/libs/vendor are third-party: they get added, upgraded, moved and
+// dropped independently of the compiler. A vendor module is SELF-DESCRIBING --
+// it declares its own @includepath, @librarypath, @linklibrary and @copydll,
+// per-platform. The consumer names it with @modulepath. Dropping a new vendor
+// into res/libs/vendor must never require editing the langdef.
+addModulePath("res/libs/std");
+
+// language implementation
+import "myra_targets.mld";
+import "myra_utils.mld";
+import "myra_tokens.mld";
+import "myra_helpers.mld";
+import "myra_grammar.mld";
+import "myra_semantics.mld";
+import "myra_emitters.mld";

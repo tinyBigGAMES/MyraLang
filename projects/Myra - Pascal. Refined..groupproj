@@ -1,0 +1,60 @@
+﻿<Project xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+    <PropertyGroup>
+        <ProjectGuid>{DA5F1FF7-67B6-4E7E-BF2C-A2213C9D3822}</ProjectGuid>
+    </PropertyGroup>
+    <ItemGroup>
+        <Projects Include="LSP\MyraLSP.dproj">
+            <Dependencies/>
+        </Projects>
+        <Projects Include="CLI\Myra.dproj">
+            <Dependencies/>
+        </Projects>
+        <Projects Include="Testbed\Testbed.dproj">
+            <Dependencies>LSP\MyraLSP.dproj;CLI\Myra.dproj</Dependencies>
+        </Projects>
+    </ItemGroup>
+    <ProjectExtensions>
+        <Borland.Personality>Default.Personality.12</Borland.Personality>
+        <Borland.ProjectType/>
+        <BorlandProject>
+            <Default.Personality/>
+        </BorlandProject>
+    </ProjectExtensions>
+    <Target Name="MyraLSP">
+        <MSBuild Projects="LSP\MyraLSP.dproj"/>
+    </Target>
+    <Target Name="MyraLSP:Clean">
+        <MSBuild Projects="LSP\MyraLSP.dproj" Targets="Clean"/>
+    </Target>
+    <Target Name="MyraLSP:Make">
+        <MSBuild Projects="LSP\MyraLSP.dproj" Targets="Make"/>
+    </Target>
+    <Target Name="Myra">
+        <MSBuild Projects="CLI\Myra.dproj"/>
+    </Target>
+    <Target Name="Myra:Clean">
+        <MSBuild Projects="CLI\Myra.dproj" Targets="Clean"/>
+    </Target>
+    <Target Name="Myra:Make">
+        <MSBuild Projects="CLI\Myra.dproj" Targets="Make"/>
+    </Target>
+    <Target Name="Testbed" DependsOnTargets="MyraLSP;Myra">
+        <MSBuild Projects="Testbed\Testbed.dproj"/>
+    </Target>
+    <Target Name="Testbed:Clean" DependsOnTargets="MyraLSP:Clean;Myra:Clean">
+        <MSBuild Projects="Testbed\Testbed.dproj" Targets="Clean"/>
+    </Target>
+    <Target Name="Testbed:Make" DependsOnTargets="MyraLSP:Make;Myra:Make">
+        <MSBuild Projects="Testbed\Testbed.dproj" Targets="Make"/>
+    </Target>
+    <Target Name="Build">
+        <CallTarget Targets="MyraLSP;Myra;Testbed"/>
+    </Target>
+    <Target Name="Clean">
+        <CallTarget Targets="MyraLSP:Clean;Myra:Clean;Testbed:Clean"/>
+    </Target>
+    <Target Name="Make">
+        <CallTarget Targets="MyraLSP:Make;Myra:Make;Testbed:Make"/>
+    </Target>
+    <Import Project="$(BDS)\Bin\CodeGear.Group.Targets" Condition="Exists('$(BDS)\Bin\CodeGear.Group.Targets')"/>
+</Project>

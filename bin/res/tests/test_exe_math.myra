@@ -1,0 +1,65 @@
+/*===============================================================================
+  Myra™ - Pascal. Refined.
+
+  Copyright © 2025-present tinyBigGAMES™ LLC
+  All Rights Reserved.
+
+  https://myralang.org
+
+  See LICENSE for license information
+==============================================================================*/
+
+/* EXPECT:
+13
+7
+30
+3
+1
+16
+26
+false
+true
+true
+true
+true
+true
+false
+true
+true
+*/
+
+// test_exe_math — Arithmetic and operator precedence
+module exe test_exe_math;
+
+var
+  a: int32;
+  b: int32;
+  c: int32;
+
+begin
+  a := 10;
+  b := 3;
+
+  println("{}", a + b);
+  println("{}", a - b);
+  println("{}", a * b);
+  println("{}", a div b);
+  println("{}", a mod b);
+
+  c := a + b * 2;
+  println("{}", c);
+
+  c := (a + b) * 2;
+  println("{}", c);
+
+  println("{}", true and false);
+  println("{}", true or false);
+  println("{}", not false);
+
+  println("{}", a = 10);
+  println("{}", a <> b);
+  println("{}", a > b);
+  println("{}", a < b);
+  println("{}", a >= 10);
+  println("{}", b <= 3);
+end.

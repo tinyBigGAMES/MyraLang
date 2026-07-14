@@ -1,0 +1,92 @@
+﻿/*===============================================================================
+  Myra™ - Pascal. Refined.
+
+  Copyright © 2025-present tinyBigGAMES™ LLC
+  All Rights Reserved.
+
+  https://myralang.org
+
+  See LICENSE for license information
+==============================================================================*/
+
+/* EXPECT:
+========================================
+  Myra target test: linuxarm64
+========================================
+arch : aarch64
+os   : linux
+
+count: 1 2 3 4 5 6 7 8 9 10
+sum 1..10 = 55
+
+utf-8: mañana éèê café 日本語
+emoji: 😀 🚀 ✅
+
+=== PASS ===
+*/
+
+module exe target_linuxarm64;
+
+@target linuxarm64;
+@optimize releasesmall;
+
+var
+  i: int32;
+  sum: int32;
+
+begin
+  println("========================================");
+  println("  Myra target test: linuxarm64");
+  println("========================================");
+
+  // --- Platform proof ---------------------------------------------------
+  // C++ passthrough. The toolchain defines these for whichever target Zig was
+  // pointed at, so this is hard evidence of what the binary really is -- not
+  // what we hoped it would be.
+  print("arch : ");
+#if defined(__x86_64__)
+  println("x86_64");
+#elif defined(__aarch64__)
+  println("aarch64");
+#elif defined(__wasm32__)
+  println("wasm32");
+#else
+  println("unknown");
+#endif
+
+  print("os   : ");
+#if defined(_WIN32)
+  println("windows");
+#elif defined(__linux__)
+  println("linux");
+#elif defined(__APPLE__)
+  println("macos");
+#elif defined(__wasm__)
+  println("wasi");
+#else
+  println("unknown");
+#endif
+
+  // --- Control flow -----------------------------------------------------
+  println("");
+  print("count:");
+  for i := 1 to 10 do
+    print(" {}", i);
+  end;
+  println("");
+
+  // --- Arithmetic -------------------------------------------------------
+  sum := 0;
+  for i := 1 to 10 do
+    sum := sum + i;
+  end;
+  println("sum 1..10 = {}", sum);
+
+  // --- Strings + UTF-8 --------------------------------------------------
+  println("");
+  println("utf-8: mañana éèê café 日本語");
+  println("emoji: 😀 🚀 ✅");
+
+  println("");
+  println("=== PASS ===");
+end.

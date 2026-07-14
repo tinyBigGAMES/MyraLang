@@ -1,0 +1,32 @@
+/*===============================================================================
+  Myra™ - Pascal. Refined.
+
+  Copyright © 2025-present tinyBigGAMES™ LLC
+  All Rights Reserved.
+
+  https://myralang.org
+
+  See LICENSE for license information
+==============================================================================*/
+
+/* EXPECT:
+two
+*/
+
+// test_exe_match — Match statement
+module exe test_exe_match;
+
+var
+  x: int32;
+
+begin
+  x := 2;
+
+  match x of
+    1: println("one");
+    2: println("two");
+    3: println("three");
+  else
+    println("other");
+  end;
+end.

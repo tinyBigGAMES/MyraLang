@@ -1,0 +1,116 @@
+/*===============================================================================
+  Myra™ - Pascal. Refined.
+
+  Copyright © 2025-present tinyBigGAMES™ LLC
+  All Rights Reserved.
+
+  https://myralang.org
+
+  See LICENSE for license information
+==============================================================================*/
+
+/* EXPECT: === TEST 01 - Maths ===
+Sqrt(4.0) = 2
+Abs(-5) = 5
+Min(3, 7) = 3
+=== TEST 02 - Strings ===
+UpperCase("hello") = HELLO
+Trim("  x  ") = x
+Length("test") = 4
+=== TEST 03 - Console ===
+Console test (green)
+=== TEST 04 - Convert ===
+IntToStr(42) = 42
+StrToInt("123") = 123
+BoolToStr(true) = True
+=== TEST 05 - Paths ===
+ExtractFileExt("test.txt") = .txt
+HasExtension("test.txt") = 1
+=== TEST 06 - DateTime ===
+IsLeapYear(2024) = 1
+DaysInMonth(2024, 2) = 29
+=== TEST 07 - Files ===
+FileExists("nonexistent.xyz") = 0
+=== TEST 08 - Geometry ===
+RectWidth(Rect(0,0,100,50)) = 100
+IsRectEmpty(Rect(0,0,100,50)) = 0
+=== TEST 09 - Assertions ===
+AssertTrue = OK
+AssertEqual = OK
+=== DONE === */
+
+/* NOTE: This test depends on standard library modules.
+   It will only compile if Maths, Strings, Console, Convert,
+   Paths, DateTime, Files, Assertions, and Geometry modules
+   are available in the module search path. */
+
+module exe test_exe_std;
+
+import
+  Maths,
+  StrUtils,
+  Console,
+  Convert,
+  Paths,
+  DateTime,
+  Files,
+  Assertions,
+  Geometry;
+
+var
+  LRect: Geometry.TRect;
+
+begin
+
+  //TEST 01 - Maths
+  println("=== TEST 01 - Maths ===");
+  println("Sqrt(4.0) = {}", Maths.Sqrt(4.0));
+  println("Abs(-5) = {}", Maths.Abs(-5));
+  println("Min(3, 7) = {}", Maths.Min(3, 7));
+
+  //TEST 02 - Strings
+  println("=== TEST 02 - Strings ===");
+  println("UpperCase(\"hello\") = {}", StrUtils.UpperCase("hello"));
+  println("Trim(\"  x  \") = {}", StrUtils.Trim("  x  "));
+  println("Length(\"test\") = {}", StrUtils.Length("test"));
+
+  //TEST 03 - Console
+  println("=== TEST 03 - Console ===");
+  println("{}Console test (green){}", Console.clGreen, Console.clReset);
+
+  //TEST 04 - Convert
+  println("=== TEST 04 - Convert ===");
+  println("IntToStr(42) = {}", Convert.IntToStr(42));
+  println("StrToInt(\"123\") = {}", Convert.StrToInt("123"));
+  println("BoolToStr(true) = {}", Convert.BoolToStr(true));
+
+  //TEST 05 - Paths
+  println("=== TEST 05 - Paths ===");
+  println("ExtractFileExt(\"test.txt\") = {}", Paths.ExtractFileExt("test.txt"));
+  println("HasExtension(\"test.txt\") = {}", int32(Paths.HasExtension("test.txt")));
+
+  //TEST 06 - DateTime
+  println("=== TEST 06 - DateTime ===");
+  println("IsLeapYear(2024) = {}", int32(DateTime.IsLeapYear(2024)));
+  println("DaysInMonth(2024, 2) = {}", DateTime.DaysInMonth(2024, 2));
+
+  //TEST 07 - Files
+  println("=== TEST 07 - Files ===");
+  println("FileExists(\"nonexistent.xyz\") = {}", int32(Files.FileExists("nonexistent.xyz")));
+
+  //TEST 08 - Geometry
+  println("=== TEST 08 - Geometry ===");
+  LRect := Geometry.Rect(0, 0, 100, 50);
+  println("RectWidth(Rect(0,0,100,50)) = {}", Geometry.RectWidth(LRect));
+  println("IsRectEmpty(Rect(0,0,100,50)) = {}", int32(Geometry.IsRectEmpty(LRect)));
+
+  //TEST 09 - Assertions
+  println("=== TEST 09 - Assertions ===");
+  Assertions.AssertTrue(true, "test");
+  println("AssertTrue = OK");
+  Assertions.AssertEqual(int64(1), int64(1), "test");
+  println("AssertEqual = OK");
+
+  println("=== DONE ===");
+
+end.

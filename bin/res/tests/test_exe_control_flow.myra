@@ -1,0 +1,138 @@
+/*===============================================================================
+  Myra™ - Pascal. Refined.
+
+  Copyright © 2025-present tinyBigGAMES™ LLC
+  All Rights Reserved.
+
+  https://myralang.org
+
+  See LICENSE for license information
+==============================================================================*/
+
+/* EXPECT: Testing control flow...
+For to: 0 1 2 3 4
+For downto: 5 4 3 2 1
+Repeat: 1 2 3 4 5
+Case 2: two
+Case 5: four to six
+Case 10: else
+Char B: 2
+Char m: lowercase
+Negative -5: 2
+No else 50: 999
+Done */
+
+module exe test_exe_control_flow;
+
+var
+  i: int32;
+  x: int32;
+  ch: char;
+  result: int32;
+
+begin
+  println("Testing control flow...");
+  
+  // Test for..to
+  print("For to:");
+  for i := 0 to 4 do
+    print(" {}", i);
+  end;
+  println("");
+  
+  // Test for..downto
+  print("For downto:");
+  for i := 5 downto 1 do
+    print(" {}", i);
+  end;
+  println("");
+  
+  // Test repeat..until
+  print("Repeat:");
+  i := 0;
+  repeat
+    i := i + 1;
+    print(" {}", i);
+  until i = 5;
+  println("");
+  
+  // Test match with single value
+  x := 2;
+  print("Case {}: ", x);
+  match x of
+    1: print("one");
+    2: print("two");
+    3: print("three");
+  else
+    print("other");
+  end;
+  println("");
+  
+  // Test match with range
+  x := 5;
+  print("Case {}: ", x);
+  match x of
+    1..3: print("one to three");
+    4..6: print("four to six");
+    7..9: print("seven to nine");
+  else
+    print("else");
+  end;
+  println("");
+  
+  // Test match else
+  x := 10;
+  print("Case {}: ", x);
+  match x of
+    1: print("one");
+    2: print("two");
+  else
+    print("else");
+  end;
+  println("");
+  
+  // Test match with char single values
+  ch := 'B';
+  match ch of
+    'A': result := 1;
+    'B': result := 2;
+    'C': result := 3;
+  else
+    result := 0;
+  end;
+  println("Char {}: {}", ch, result);
+  
+  // Test match with char ranges
+  ch := 'm';
+  print("Char {}: ", ch);
+  match ch of
+    'a'..'z': print("lowercase");
+    'A'..'Z': print("uppercase");
+    '0'..'9': print("digit");
+  else
+    print("other");
+  end;
+  println("");
+  
+  // Test negative values
+  x := -5;
+  match x of
+    -10..-6: result := 1;
+    -5..-1: result := 2;
+    0..5: result := 3;
+  else
+    result := 0;
+  end;
+  println("Negative {}: {}", x, result);
+  
+  // Test no else clause
+  result := 999;
+  x := 50;
+  match x of
+    1..10: result := 1;
+    20..30: result := 2;
+  end;
+  println("No else {}: {}", x, result);
+  
+  println("Done");
+end.
