@@ -98,3 +98,4 @@ bin/build.toml
 /bin/res/assets
 targets.yml
 /targets
+docs/Myra.pdf
