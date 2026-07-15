@@ -9,15 +9,35 @@
   See LICENSE for license information
 ==============================================================================*/
 
-/* EXPECT: Hello from Myra! */
+/* EXPECT:
+Hello from Myra!
+Deref: 42
+*/
+
+/* ALLOW_WARNINGS */
 
 module exe test_exe_hello;
+
+// Exercise @message compile-time diagnostics. hint and warn are non-fatal and
+// surface during the build, not in program output, so EXPECT is unchanged.
+// (error/fatal would halt the build, so they cannot appear in a passing test.)
+@message hint "test_exe_hello: hint diagnostic";
+@message warn "test_exe_hello: warn diagnostic";
 
 // Tester-guided test: no @target. The tester drives the target, and the
 // registration's platform list decides which targets it runs on.
 //@target "wasm32";
 
+var
+  x: int32;
+  p: pointer to int32;
 
 begin
   println("Hello from Myra!");
+
+  // Guard (Atom 2): `^` deref still works after removing the op.deref token.
+  // `^` now lexes straight to cpp.op.bitxor, which the deref rule consumes.
+  x := 42;
+  p := address of x;
+  println("Deref: {}", p^);
 end.

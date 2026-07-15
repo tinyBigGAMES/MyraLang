@@ -640,8 +640,15 @@ emitters {
   on stmt.directive_breakpoint  { addBreakpoint(getNodeFile(node), getNodeLine(node)); }
   on stmt.directive_message     {
     // BNF: @message hint|warn|error|fatal "text"
-    // severity in @severity attr, text in @value attr
-    // No C++ output needed; handled at parse time
+    let sev = getAttr(node, "severity");
+    let msg = getAttr(node, "value");
+    if sev == "hint" {
+      hint(msg);
+    } else if sev == "warn" {
+      warning(msg);
+    } else if sev == "error" or sev == "fatal" {
+      errorAt(node, msg);
+    }
   }
   on stmt.directive_unittestmode { }
 

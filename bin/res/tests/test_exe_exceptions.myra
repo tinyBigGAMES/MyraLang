@@ -19,7 +19,7 @@ After guard
 In guard block
 In except block: code=1
 In finally block
-=== raiseexceptioncode ===
+=== raisecode ===
 Custom code: 42, msg=Custom error
 === Nested guard ===
 Inner exception caught
@@ -100,7 +100,7 @@ end;
 // Routine that throws - for propagation test
 routine throwingRoutine();
 begin
-  raiseexception("Propagated error");
+  raise("Propagated error");
 end;
 
 // Test exception propagation
@@ -109,7 +109,7 @@ begin
   guard
     throwingRoutine();
   except
-    println("Caught propagated: code={}", getexceptioncode());
+    println("Caught propagated: code={}", exccode());
   end;
 end;
 
@@ -119,13 +119,13 @@ var
   localB: int32;
 
 begin
-  // Test 1: Basic guard/except with raise - test getexceptionmessage
+  // Test 1: Basic guard/except with raise - test excmsg
   println("=== Basic guard/except ===");
   guard
-    raiseexception("Test error");
+    raise("Test error");
     println("Should not print");
   except
-    println("Exception caught: code={}, msg={}", getexceptioncode(), getexceptionmessage());
+    println("Exception caught: code={}, msg={}", exccode(), excmsg());
   end;
 
   // Test 2: Guard/finally without exception
@@ -141,26 +141,26 @@ begin
   println("=== Guard/except/finally ===");
   guard
     println("In guard block");
-    raiseexception("Error!");
+    raise("Error!");
   except
-    println("In except block: code={}", getexceptioncode());
+    println("In except block: code={}", exccode());
   finally
     println("In finally block");
   end;
 
-  // Test 4: raiseexceptioncode with custom code and message
-  println("=== raiseexceptioncode ===");
+  // Test 4: raisecode with custom code and message
+  println("=== raisecode ===");
   guard
-    raiseexceptioncode(42, "Custom error");
+    raisecode(42, "Custom error");
   except
-    println("Custom code: {}, msg={}", getexceptioncode(), getexceptionmessage());
+    println("Custom code: {}, msg={}", exccode(), excmsg());
   end;
 
   // Test 5: Nested guard blocks
   println("=== Nested guard ===");
   guard
     guard
-      raiseexception("Inner error");
+      raise("Inner error");
     except
       println("Inner exception caught");
     end;
@@ -174,7 +174,7 @@ begin
     x := 10 div getZero();
     println("Should not print: {}", x);
   except
-    println("Hardware exception caught: code={}, msg={}", getexceptioncode(), getexceptionmessage());
+    println("Hardware exception caught: code={}, msg={}", exccode(), excmsg());
   end;
 
   // Test 7: Local variable capture in routine

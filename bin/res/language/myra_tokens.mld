@@ -10,10 +10,10 @@
 //                   else, while, do, for, to, downto, repeat, until, return,
 //                   match, var, const, type, routine, method, record, object,
 //                   overlay, choices, packed, align, array, of, set, pointer,
-//                   and, or, not, xor, div, mod, shl, shr, in, is, true,
+//                   and, or, not, xor, div, mod, shl, shr, in, true,
 //                   false, nil, address, self, parent, guard, except, finally,
-//                   raiseexception, raiseexceptioncode, getexceptioncode,
-//                   getexceptionmessage, create, destroy, getmem, freemem,
+//                   raise, raisecode, exccode,
+//                   excmsg, create, destroy, getmem, freemem,
 //                   resizemem, setlength, print, println, len, size, utf8,
 //                   paramcount, paramstr, varargs, exe, dll, lib,
 //                   test, testAssert, testAssertTrue, testAssertFalse,
@@ -22,7 +22,7 @@
 //                   testAssertEqualBool, testAssertEqualPtr,
 //                   testAssertNil, testAssertNotNil, testFail
 //    Operators      :=, +=, -=, *=, /=, <>, <=, >=, ..., .., =, <, >, +,
-//                   -, *, /, ^, |, &
+//                   -, *, /
 //    Delimiters     ( ) [ ] , : ; .
 //    Comments       // (line), /* */ (block)
 //    Strings        " (C-style), w" (wide)
@@ -97,7 +97,6 @@ tokens {
   token keyword.shl       = "shl";
   token keyword.shr       = "shr";
   token keyword.in        = "in";
-  token keyword.is        = "is";
 
   // Literals
   token keyword.true      = "true";
@@ -115,10 +114,10 @@ tokens {
   token keyword.guard              = "guard";
   token keyword.except             = "except";
   token keyword.finally            = "finally";
-  token keyword.raiseexception     = "raiseexception";
-  token keyword.raiseexceptioncode = "raiseexceptioncode";
-  token keyword.getexceptioncode     = "getexceptioncode";
-  token keyword.getexceptionmessage  = "getexceptionmessage";
+  token keyword.raiseexception     = "raise";
+  token keyword.raiseexceptioncode = "raisecode";
+  token keyword.getexceptioncode     = "exccode";
+  token keyword.getexceptionmessage  = "excmsg";
 
   // Memory management
   token keyword.create    = "create";
@@ -182,9 +181,6 @@ tokens {
   token op.minus          = "-";
   token op.multiply       = "*";
   token op.divide         = "/";
-  token op.deref          = "^";
-  token op.pipe           = "|";
-  token op.ampersand      = "&";
 
   // Delimiters
   token delimiter.lparen    = "(";
