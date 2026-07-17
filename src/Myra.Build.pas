@@ -79,6 +79,7 @@ const
   MYR_TARGET_LINUXARM64 = 'linuxarm64';
   MYR_TARGET_MACOS64    = 'macos64';
   MYR_TARGET_WASM32     = 'wasm32';
+  MYR_TARGET_WINMSVC64  = 'winmsvc64';
 
   { Language standard flags }
   // Sources are grouped by extension: .c compiles as C, everything else as
@@ -278,6 +279,7 @@ type
     // True when the target is a WebAssembly arch. Wasm has no native execution
     // path: it runs in a browser through the emitted self-contained HTML.
     function DoIsWasmTarget(): Boolean;
+    function DoIsMsvcTarget(): Boolean;
 
     // Emits <project>.html beside <project>.wasm, with the module bytes and the
     // WASI shim both inlined so the file runs by double-click, without a server.
@@ -563,17 +565,37 @@ const
   // HAND-CURATED, not derived. Every entry has been verified to compile and
   // link C++23 from a Windows host with the bundled toolchain. This
   // deliberately does NOT expose the full arch/os/abi space: most of the tag
-  // combinations Zig accepts are not actually buildable (windows+msvc collides
-  // libc++ with MSVC's vcruntime; wasm64 and emscripten have no libc).
-  // Flexibility that cannot build is worse than a short honest list.
-  MYR_TARGET_ALIASES: array[0..5] of TTargetAlias = (
+  // combinations Zig accepts are not actually buildable (wasm64 and emscripten
+  // have no libc). Seven targets total: six are self-contained (bundled
+  // toolchain only), and winmsvc64 (x86_64-windows-msvc) is OPT-IN, requiring
+  // the in-repo MSVC kit at res/libs/system/msvc to consume prebuilt MSVC C++
+  // libraries. Flexibility that cannot build is worse than a short honest list.
+  MYR_TARGET_ALIASES: array[0..6] of TTargetAlias = (
     (Alias: MYR_TARGET_WIN64;      Triple: 'x86_64-windows-gnu'),
     (Alias: MYR_TARGET_WINARM64;   Triple: 'aarch64-windows-gnu'),
     (Alias: MYR_TARGET_LINUX64;    Triple: 'x86_64-linux-gnu'),
     (Alias: MYR_TARGET_LINUXARM64; Triple: 'aarch64-linux-gnu'),
     (Alias: MYR_TARGET_MACOS64;    Triple: 'aarch64-macos-none'),
-    (Alias: MYR_TARGET_WASM32;     Triple: 'wasm32-wasi')
+    (Alias: MYR_TARGET_WASM32;     Triple: 'wasm32-wasi'),
+    (Alias: MYR_TARGET_WINMSVC64;  Triple: 'x86_64-windows-msvc')
   );
+
+  { MSVC kit layout }
+  // The winmsvc64 target links MSVC-ABI C++ (to consume prebuilt MSVC libs such
+  // as OpenCV) through the bundled zig toolchain. It needs the in-repo portable
+  // MSVC kit -- STL + vcruntime headers, the Windows SDK, and a zig libc paths
+  // file -- rooted at res/libs/system/msvc (resolved via GetLibsPath). The
+  // dynamic-CRT link recipe below was proven to produce a clean /MD dependency
+  // set (VCRUNTIME140 + api-ms-win-crt-*), not a static CRT.
+  MSVC_KIT_SUBDIR      = 'system/msvc';
+  MSVC_LIBC_SUBPATH    = 'system/msvc/msvc.libc';
+  MSVC_INCLUDE_SUBDIRS: array[0..3] of string =
+    ('vc/include', 'sdk/include/ucrt', 'sdk/include/um', 'sdk/include/shared');
+  MSVC_LIBRARY_SUBDIRS: array[0..2] of string =
+    ('vc/lib', 'sdk/lib/ucrt', 'sdk/lib/um');
+  MSVC_CRT_LIBS: array[0..5] of string =
+    ('msvcprt', 'msvcrt', 'vcruntime', 'ucrt',
+     'legacy_stdio_definitions', 'kernel32');
 
 // Resolve a curated alias to a full Zig triple and set it as the build target.
 //
@@ -699,6 +721,14 @@ begin
   // browser -- no server, no runtime to install. It is as runnable as the two
   // native triples below, so it belongs in this check.
   if DoIsWasmTarget() then
+    Exit(True);
+
+  // x86_64-windows-msvc runs natively on this host too. It is the same machine
+  // code as the gnu Windows target -- only the CRT/STL ABI differs -- so it is
+  // just as launchable. The linux case below stays gnu-only (it goes through
+  // WSL), so this native-Windows msvc case is handled first.
+  if SameText(LArch, ARCH_X86_64) and SameText(LOS, OS_WINDOWS) and
+     SameText(LAbi, ABI_MSVC) then
     Exit(True);
 
   // Beyond wasm, exactly two triples can be launched from this Windows x64
@@ -1281,7 +1311,10 @@ begin
       else
         LFlags.Add('"-fno-exceptions"');
       LFlags.Add('"-frtti"');
-      LFlags.Add('"-fexperimental-library"');
+      // libc++ experimental flag -- meaningless with MSVC's STL, so skip it on
+      // the msvc target.
+      if not DoIsMsvcTarget() then
+        LFlags.Add('"-fexperimental-library"');
     end;
 
     // Required for hardware exception handling
@@ -1290,8 +1323,25 @@ begin
     LFlags.Add('"-Wno-parentheses-equality"');
     // Suppress Zig-injected flags like -fno-rtlib-defaultlib
     LFlags.Add('"-Wno-unused-command-line-argument"');
-    LFlags.Add('"-fdeclspec"');
-    LFlags.Add('"-fms-extensions"');
+    // clang auto-enables full MS compatibility for the -windows-msvc target,
+    // which handles __declspec and MS extensions correctly -- including letting
+    // clang's own intrinsic headers win over the MSVC kit's (whose
+    // __declspec(intrin_type) clang rejects). Forcing -fms-extensions/-fdeclspec
+    // there downgrades that, so add them only for the gnu/other targets.
+    if not DoIsMsvcTarget() then
+    begin
+      LFlags.Add('"-fdeclspec"');
+      LFlags.Add('"-fms-extensions"');
+    end;
+    // Select the DYNAMIC MSVC CRT (/MD) for the msvc target. clang-cl derives
+    // _MT/_DLL from /MD, but the plain clang driver does not -- without them the
+    // MSVC STL emits static-CRT references (e.g. std::locale::id::_Id_cnt) that
+    // do not match the dynamic msvcprt.lib import and fail at link.
+    if DoIsMsvcTarget() then
+    begin
+      LFlags.Add('"-D_MT"');
+      LFlags.Add('"-D_DLL"');
+    end;
     // Required for debugger stack unwinding via [RBP+8]
     LFlags.Add('"-fno-omit-frame-pointer"');
 
@@ -1423,19 +1473,57 @@ begin
   ABuilder.AppendLine('        .root_module = b.createModule(.{');
   ABuilder.AppendLine('            .target = target,');
   ABuilder.AppendLine('            .optimize = optimize,');
-  ABuilder.AppendLine('            .link_libc = true,');
-  ABuilder.AppendLine('            .link_libcpp = true,');
+  if DoIsMsvcTarget() then
+  begin
+    // MSVC ABI: link_libcpp=false avoids the libc++ / vcruntime_typeinfo.h
+    // type_info collision; link_libc=false stops zig statically dragging in the
+    // MSVC CRT. The dynamic CRT import libs are fed by hand in DoZigSources, and
+    // the libc paths file is passed to `zig build` in Build().
+    ABuilder.AppendLine('            .link_libc = false,');
+    ABuilder.AppendLine('            .link_libcpp = false,');
+  end
+  else
+  begin
+    ABuilder.AppendLine('            .link_libc = true,');
+    ABuilder.AppendLine('            .link_libcpp = true,');
+  end;
   ABuilder.AppendLine('        }),');
   ABuilder.AppendLine('    });');
 
-  // GUI subsystem: suppress the console window on Windows (executables only)
-  if (FBuildMode = bmExe) and (FSubsystem = stGUI) then
+  // Windows subsystem + entry point (executables only). A dll or static lib
+  // gets neither: bmDll uses the default CRT dll entry, bmLib is archived not
+  // linked.
+  if FBuildMode = bmExe then
   begin
-    ABuilder.AppendLine();
-    ABuilder.AppendLine('    // GUI subsystem: no console window');
-    ABuilder.AppendLine('    if (target.result.os.tag == .windows) {');
-    ABuilder.AppendLine('        exe.subsystem = .windows;');
-    ABuilder.AppendLine('    }');
+    if DoIsMsvcTarget() then
+    begin
+      // With link_libc=false zig defaults the Windows exe entry to
+      // wWinMainCRTStartup (GUI); lld then pulls exe_wwinmain.obj -> undefined
+      // wWinMain. Force the CRT startup that matches the subsystem so lld pulls
+      // the right startup obj (console -> exe_main.obj -> our main).
+      ABuilder.AppendLine();
+      if FSubsystem = stGUI then
+      begin
+        ABuilder.AppendLine('    ' + AArtifactVar + '.subsystem = .windows;');
+        ABuilder.AppendLine('    ' + AArtifactVar +
+          '.entry = .{ .symbol_name = "wWinMainCRTStartup" };');
+      end
+      else
+      begin
+        ABuilder.AppendLine('    ' + AArtifactVar + '.subsystem = .Console;');
+        ABuilder.AppendLine('    ' + AArtifactVar +
+          '.entry = .{ .symbol_name = "mainCRTStartup" };');
+      end;
+    end
+    else if FSubsystem = stGUI then
+    begin
+      // GUI subsystem: suppress the console window on Windows
+      ABuilder.AppendLine();
+      ABuilder.AppendLine('    // GUI subsystem: no console window');
+      ABuilder.AppendLine('    if (target.result.os.tag == .windows) {');
+      ABuilder.AppendLine('        ' + AArtifactVar + '.subsystem = .windows;');
+      ABuilder.AppendLine('    }');
+    end;
   end;
 
   ABuilder.AppendLine();
@@ -1486,20 +1574,65 @@ begin
       '.root_module.addIncludePath(b.path("' +
       MakeRelativePath(FOutputPath, FIncludePaths[LI]) + '"));');
 
+  // MSVC kit includes (winmsvc64 only, every build mode compiles C++). With
+  // link_libc=false zig no longer auto-adds the libc include dirs, so the MSVC
+  // STL / vcruntime and UCRT headers are supplied here by hand.
+  if DoIsMsvcTarget() then
+    for LI := Low(MSVC_INCLUDE_SUBDIRS) to High(MSVC_INCLUDE_SUBDIRS) do
+      ABuilder.AppendLine('    ' + AArtifactVar +
+        '.root_module.addIncludePath(b.path("' +
+        MakeRelativePath(FOutputPath,
+          GetLibsPath(MSVC_KIT_SUBDIR + '/' + MSVC_INCLUDE_SUBDIRS[LI])) +
+        '"));');
+
   // The build's own artifact directories. A Myra module that links against
   // another Myra dll or lib resolves its import library from here. These are
   // always relative to the output directory by construction, so they follow
   // -o automatically and never need MakeRelativePath.
-  ABuilder.AppendLine('    ' + AArtifactVar +
-    '.root_module.addLibraryPath(b.path("zig-out/lib"));');
-  ABuilder.AppendLine('    ' + AArtifactVar +
-    '.root_module.addLibraryPath(b.path("zig-out/bin"));');
+  //
+  // On msvc these are emitted LAST instead (see below): the COFF linker
+  // (lld-link) rejects a bare .dll on the link line, and @copydll drops vendor
+  // runtime DLLs into zig-out/bin. If zig-out/bin were searched first, lld-link
+  // would hit a copied <name>.dll before the real <name>.lib in the vendor lib
+  // dir and fail. Searching the vendor/import-lib dirs first avoids that. The
+  // gnu/ELF linkers on every other target accept a .dll/.so directly, so their
+  // order is unchanged.
+  if not DoIsMsvcTarget() then
+  begin
+    ABuilder.AppendLine('    ' + AArtifactVar +
+      '.root_module.addLibraryPath(b.path("zig-out/lib"));');
+    ABuilder.AppendLine('    ' + AArtifactVar +
+      '.root_module.addLibraryPath(b.path("zig-out/bin"));');
+  end;
 
   // Library paths (relative to the output directory)
   for LI := 0 to FLibraryPaths.Count - 1 do
     ABuilder.AppendLine('    ' + AArtifactVar +
       '.root_module.addLibraryPath(b.path("' +
       MakeRelativePath(FOutputPath, FLibraryPaths[LI]) + '"));');
+
+  // MSVC kit library search paths (winmsvc64, linked modes only -- a static
+  // lib is archived, not linked, so CRT import libs are meaningless there).
+  // These carry the dynamic CRT / UCRT / Win32 um import libs linked below.
+  if DoIsMsvcTarget() and (FBuildMode <> bmLib) then
+    for LI := Low(MSVC_LIBRARY_SUBDIRS) to High(MSVC_LIBRARY_SUBDIRS) do
+      ABuilder.AppendLine('    ' + AArtifactVar +
+        '.root_module.addLibraryPath(b.path("' +
+        MakeRelativePath(FOutputPath,
+          GetLibsPath(MSVC_KIT_SUBDIR + '/' + MSVC_LIBRARY_SUBDIRS[LI])) +
+        '"));');
+
+  // msvc only: the build's own artifact dirs go LAST, after the vendor and kit
+  // import-lib dirs, so lld-link resolves a real <name>.lib before any copied
+  // <name>.dll that @copydll placed in zig-out/bin. A Myra dll's own import lib
+  // still lands in zig-out/lib and is found here.
+  if DoIsMsvcTarget() then
+  begin
+    ABuilder.AppendLine('    ' + AArtifactVar +
+      '.root_module.addLibraryPath(b.path("zig-out/lib"));');
+    ABuilder.AppendLine('    ' + AArtifactVar +
+      '.root_module.addLibraryPath(b.path("zig-out/bin"));');
+  end;
 
   // On Linux (executables only), add rpath $ORIGIN so the binary finds .so
   // files in its own directory
@@ -1516,6 +1649,16 @@ begin
   for LI := 0 to FLinkLibraries.Count - 1 do
     ABuilder.AppendLine('    ' + AArtifactVar +
       '.root_module.linkSystemLibrary("' + FLinkLibraries[LI] + '", .{});');
+
+  // MSVC dynamic CRT import libs (winmsvc64, linked modes only). Emitted AFTER
+  // the user libraries so a consumed MSVC lib (e.g. opencv_world500) precedes
+  // the CRT -- the exact order proven to yield a clean /MD dependency set. This
+  // is the dynamic-CRT line; the static libcmt/libvcruntime/libucrt are never
+  // named, which is what keeps the CRT out of the binary.
+  if DoIsMsvcTarget() and (FBuildMode <> bmLib) then
+    for LI := Low(MSVC_CRT_LIBS) to High(MSVC_CRT_LIBS) do
+      ABuilder.AppendLine('    ' + AArtifactVar +
+        '.root_module.linkSystemLibrary("' + MSVC_CRT_LIBS[LI] + '", .{});');
 
   // Source files, partitioned by language. Each group gets its own
   // addCSourceFiles block with its own std flag, so C libraries and C++23
@@ -1948,6 +2091,7 @@ var
   LArch: string;
   LOS: string;
   LAbi: string;
+  LZigBuildArgs: string;
 begin
   Result := False;
 
@@ -1997,9 +2141,18 @@ begin
 
   // Run zig build
   Status(RSMyraBuildBuilding, [FProjectName]);
+  LZigBuildArgs := 'build --color auto --summary none ' +
+    '--multiline-errors newline --error-style minimal';
+  // winmsvc64: zig needs the MSVC libc paths file to compile the msvc target at
+  // all (even with link_libc=false; without it: LibCStdLibHeaderNotFound). The
+  // six normal targets pass no --libc. `zig build` accepts --libc; `zig cc`
+  // does not, which is why the raw two-step used ZIG_LIBC instead.
+  if DoIsMsvcTarget() then
+    LZigBuildArgs := LZigBuildArgs + ' --libc "' +
+      TPath.GetFullPath(GetLibsPath(MSVC_LIBC_SUBPATH)) + '"';
   TUtils.CaptureZigConsolePTY(
     PChar(LZigExe),
-    'build --color auto --summary none --multiline-errors newline --error-style minimal',
+    PChar(LZigBuildArgs),
     FOutputPath,
     FLastExitCode,
     nil,
@@ -2468,6 +2621,20 @@ var
 begin
   LArch := GetTargetArch();
   Result := SameText(LArch, ARCH_WASM32) or SameText(LArch, ARCH_WASM64);
+end;
+
+// True when the target ABI is MSVC (winmsvc64 / x86_64-windows-msvc). Gates the
+// dynamic-CRT MSVC link recipe in DoZigArtifact, DoZigSources and Build. A
+// malformed triple falls back to the default target, which is never msvc.
+function TBuild.DoIsMsvcTarget(): Boolean;
+var
+  LArch: string;
+  LOS: string;
+  LAbi: string;
+begin
+  if not DoSplitTarget(FTarget, LArch, LOS, LAbi) then
+    DoSplitTarget(DEFAULT_TARGET, LArch, LOS, LAbi);
+  Result := SameText(LAbi, ABI_MSVC);
 end;
 
 { Emits a self-contained HTML runner beside the .wasm. The module bytes and the

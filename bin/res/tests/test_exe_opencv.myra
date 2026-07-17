@@ -1,0 +1,34 @@
+﻿/*===============================================================================
+  Myra™ - Pascal. Refined.
+
+  Copyright © 2025-present tinyBigGAMES™ LLC
+  All Rights Reserved.
+
+  https://myralang.org
+
+  See LICENSE for license information
+==============================================================================*/
+
+/* PLATFORMS: WINMSVC64 */
+/* ALLOW_WARNINGS */
+
+module exe test_exe_opencv;
+
+@target winmsvc64;
+
+@modulepath "res/libs/vendor/opencv";
+
+import
+  opencv_import;
+
+var
+  LSrc: Mat;
+  LGray: Mat;
+begin
+  LSrc := imread("../../../res/assets/images/myra.jpg", IMREAD_COLOR);
+
+  if not LSrc.empty() then
+    cvtColor(LSrc, LGray, COLOR_BGR2GRAY);
+    imwrite("../../../myra_gray.png", LGray);
+  end;
+end.

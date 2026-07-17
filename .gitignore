@@ -99,3 +99,5 @@ bin/build.toml
 targets.yml
 /targets
 docs/Myra.pdf
+bin/myra_gray.png
+/bin/res/libs/system
