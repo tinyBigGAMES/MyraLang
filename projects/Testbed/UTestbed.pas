@@ -115,27 +115,32 @@ begin
   ATester.RegisterTest(501, 'test_exe_sdl3_image', rmExecute);
   ATester.RegisterTest(502, 'test_exe_sdl3_mixer', rmExecute);
 
+  ATester.SetCategory('OpenCV');
+  ATester.RegisterTest(550, 'test_exe_opencv', rmExecute);
+
   ATester.SetCategory('Targets');
   // These files SELF-PIN via their own @target directive, which overrides the
   // tester by design. Each is registered with the matching platform list so
   // the pin and the run agree.
-  ATester.RegisterTest(550, 'target_win64', rmExecute, [MYR_TARGET_WIN64]);
-  ATester.RegisterTest(551, 'target_winarm64', rmExecute, [MYR_TARGET_WINARM64]);
-  ATester.RegisterTest(552, 'target_linux64', rmExecute, [MYR_TARGET_LINUX64]);
-  ATester.RegisterTest(553, 'target_linuxarm64', rmExecute, [MYR_TARGET_LINUXARM64]);
-  ATester.RegisterTest(554, 'target_macos64', rmExecute, [MYR_TARGET_MACOS64]);
-  ATester.RegisterTest(555, 'target_wasm32', rmExecute, [MYR_TARGET_WASM32]);
+  ATester.RegisterTest(9000, 'target_win64', rmExecute, [MYR_TARGET_WIN64]);
+  ATester.RegisterTest(9001, 'target_winarm64', rmExecute, [MYR_TARGET_WINARM64]);
+  ATester.RegisterTest(9002, 'target_linux64', rmExecute, [MYR_TARGET_LINUX64]);
+  ATester.RegisterTest(9003, 'target_linuxarm64', rmExecute, [MYR_TARGET_LINUXARM64]);
+  ATester.RegisterTest(9004, 'target_macos64', rmExecute, [MYR_TARGET_MACOS64]);
+  ATester.RegisterTest(9005, 'target_wasm32', rmExecute, [MYR_TARGET_WASM32]);
 end;
 
 procedure RunTestbed();
 var
   LTester: TTester;
   LMenu: TConsoleMenu;
+  LLSPMenu: TConsoleMenu;
 begin
+  LLSPMenu := nil;
   try
     LTester := TTester.Create();
     try
-      //LTester.ShowStatus := True;
+      LTester.ShowStatus := True;
       // AUDIT: win64 only. Widen once the suite is green.
       LTester.Targets := [MYR_TARGET_WIN64];
       RegisterTests(LTester);
@@ -145,9 +150,9 @@ begin
       // LSP demos -- appended last, so they sit at the bottom of the menu.
       // Same feature script driven over two transports: memory streams
       // in-process, and real pipes to a spawned MyraLSP.exe.
-      LMenu.AddSeparator();
-      LMenu.AddTestDemo(TLSPInProcessDemo);
-      LMenu.AddTestDemo(TLSPOutProcessDemo);
+      LLSPMenu := LMenu.AddSubmenu('LSP');
+      LLSPMenu.AddTestDemo(TLSPInProcessDemo);
+      LLSPMenu.AddTestDemo(TLSPOutProcessDemo);
 
       try
         LMenu.Pause := True;

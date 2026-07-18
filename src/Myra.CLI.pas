@@ -32,6 +32,7 @@ type
     FOutputPath: string;
     FAutoRun:    Boolean;
     FDebug:      Boolean;
+    FClean:      Boolean;
     procedure ShowBanner();
     procedure ShowHelp();
     procedure ShowErrors();
@@ -63,6 +64,7 @@ begin
   FOutputPath := 'output';
   FAutoRun    := False;
   FDebug      := False;
+  FClean      := False;
 end;
 
 destructor TMyrCLI.Destroy();
@@ -110,6 +112,8 @@ begin
     '   Build and run the compiled binary');
   TConsole.PrintLn('  ' + COLOR_CYAN + '-d, --debug         ' + COLOR_RESET +
     '   Build and debug the compiled binary');
+  TConsole.PrintLn('  ' + COLOR_CYAN + '-c, --clean         ' + COLOR_RESET +
+    '   Remove the last build output (from build.toml)');
   TConsole.PrintLn('  ' + COLOR_CYAN + '-h, --help          ' + COLOR_RESET +
     '   Display this help message');
   TConsole.PrintLn('');
@@ -204,6 +208,10 @@ begin
     begin
       FDebug := True;
     end
+    else if (LFlag = '-c') or (LFlag = '--clean') then
+    begin
+      FClean := True;
+    end
     else
     begin
       TConsole.PrintLn(COLOR_RED + 'Error: Unknown flag: ' +
@@ -220,8 +228,9 @@ begin
     Inc(LI);
   end;
 
-  // Validate required arguments
-  if FSourceFile = '' then
+  // Validate required arguments. A source file is required for a build, but
+  // `myra -c` (clean only) is a valid standalone action with no source.
+  if (FSourceFile = '') and (not FClean) then
   begin
     TConsole.PrintLn(COLOR_RED +
       'Error: Source file is required (-s <file>)');
@@ -313,6 +322,17 @@ begin
   ShowBanner();
 
   if not ParseArgs() then
+    Exit;
+
+  SetupCallbacks();
+
+  // -c always runs FIRST. The clean target comes ONLY from build.toml (the last
+  // successful build) and is validated before anything is removed.
+  if FClean then
+    FEngine.Clean();
+
+  // Clean-only invocation (no source file): nothing more to do.
+  if FSourceFile = '' then
     Exit;
 
   FOutputPath := TPath.GetFullPath(FOutputPath);

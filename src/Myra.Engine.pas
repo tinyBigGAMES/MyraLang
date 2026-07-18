@@ -89,6 +89,9 @@ type
     procedure CompileBaked(const ASourceFile: string;
       const AOutputPath: string; const AAutoRun: Boolean);
 
+    // Remove the last successful build's artifacts (delegates to TBuild.Clean).
+    function Clean(): Boolean;
+
     // Build configuration wrappers
     function SetTargetAlias(const ATarget: string): Boolean;
     procedure SetTarget(const ATarget: string); overload;
@@ -655,6 +658,14 @@ end;
 function TEngine.SetTargetAlias(const ATarget: string): Boolean;
 begin
   Result := FBuild.SetTargetAlias(ATarget);
+end;
+
+// Remove the last successful build's artifacts. Target + validation live in
+// TBuild.Clean (reads build.output_path from build.toml, verifies it is a Myra
+// build folder before deleting anything).
+function TEngine.Clean(): Boolean;
+begin
+  Result := FBuild.Clean();
 end;
 
 procedure TEngine.SetTarget(const ATarget: string);

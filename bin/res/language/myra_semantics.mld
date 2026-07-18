@@ -55,7 +55,13 @@ semantics {
   // Directive semantics (no-op; configuration wired in emitters)
   on stmt.directive_optimize    { }
   on stmt.directive_subsystem   { }
-  on stmt.directive_target      { }
+  // @target must apply DURING semantics, not only in the emit pre-scan: imports
+  // are compiled here (stmt.import_item -> compileModule) and a vendor module's
+  // @ifdef TARGET_* resolves at LEX time against the build define table. Applying
+  // here -- before the import child is visited -- publishes TARGET_<alias> in time
+  // to gate the import. Requires @target to precede imports in source, the same
+  // ordering rule @modulepath already follows.
+  on stmt.directive_target      { applyTarget(node); }
   on stmt.directive_addverinfo  { }
   on stmt.directive_vimajor     { }
   on stmt.directive_viminor     { }

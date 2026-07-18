@@ -225,6 +225,12 @@ type
     procedure HandleOutputLine(const ALine: string; const AUserData: Pointer);
     procedure ApplyPostBuildResources(const AExePath: string);
 
+    // The ONLY gate before any delete in Clean(). True only when APath carries
+    // Myra's build fingerprint (absolute, non-root, existing dir containing a
+    // generated build.zig plus generated/ or zig-out/). A folder that fails this
+    // is NEVER touched -- a stray or user path can never be removed by clean.
+    function IsMyraOutputFolder(const APath: string): Boolean;
+
   public
     constructor Create(); override;
     destructor Destroy(); override;
@@ -345,6 +351,13 @@ type
     function Run(): Boolean;
     function ClearCache(): Boolean;
     function ClearOutput(): Boolean;
+
+    // Remove the artifacts of the LAST SUCCESSFUL build. The target comes ONLY
+    // from build.output_path in build.toml (written on success) -- never from -o,
+    // never guessed -- and is validated by IsMyraOutputFolder before anything is
+    // deleted. Only the children Myra emits are removed (generated/, zig-out/,
+    // .zig-cache/, build.zig); the folder itself and any user files in it survive.
+    function Clean(): Boolean;
 
     // Getters
     function GetLastExitCode(): DWORD;
@@ -2333,6 +2346,12 @@ begin
   // Contrast the two sites above, which ARE genuine build errors: `zig build`
   // itself failing, and the exe not existing after a successful build.
 
+  // Record this output path as the last successful build so `myra -c` knows
+  // exactly what to clean -- a verified location from a real build, never a
+  // guess. Written on success only; a failed build leaves the last good value.
+  if Assigned(FBuildConfig) then
+    FBuildConfig.SetString('build.output_path', TPath.GetFullPath(FOutputPath));
+
   Result := True;
 end;
 
@@ -2354,6 +2373,108 @@ begin
   LOutputDir := TPath.Combine(FOutputPath, 'zig-out');
   if TDirectory.Exists(LOutputDir) then
     TDirectory.Delete(LOutputDir, True);
+end;
+
+function TBuild.IsMyraOutputFolder(const APath: string): Boolean;
+var
+  LFull: string;
+begin
+  Result := False;
+
+  if APath.Trim() = '' then
+    Exit;
+
+  LFull := TPath.GetFullPath(APath);
+
+  // Reject a non-rooted path or a bare drive root (e.g. 'C:\').
+  if not TPath.IsPathRooted(LFull) then
+    Exit;
+  if SameText(LFull, TPath.GetPathRoot(LFull)) then
+    Exit;
+  if not TDirectory.Exists(LFull) then
+    Exit;
+
+  // Fingerprint: a generated build.zig MUST be present (a user folder will not
+  // have one), plus at least one emitted output subdir.
+  if not TFile.Exists(TPath.Combine(LFull, 'build.zig')) then
+    Exit;
+  if not (TDirectory.Exists(TPath.Combine(LFull, 'generated')) or
+          TDirectory.Exists(TPath.Combine(LFull, 'zig-out'))) then
+    Exit;
+
+  Result := True;
+end;
+
+function TBuild.Clean(): Boolean;
+var
+  LRoot: string;
+
+  procedure DoRemoveDir(const AName: string);
+  var
+    LDir: string;
+  begin
+    LDir := TPath.Combine(LRoot, AName);
+    if not TDirectory.Exists(LDir) then
+      Exit;
+    try
+      TDirectory.Delete(LDir, True);
+      Status('Removed %s', [AName]);
+    except
+      on E: Exception do
+      begin
+        Result := False;
+        Status('Clean failed for %s: %s', [AName, E.Message]);
+      end;
+    end;
+  end;
+
+  procedure DoRemoveFile(const AName: string);
+  var
+    LFile: string;
+  begin
+    LFile := TPath.Combine(LRoot, AName);
+    if not TFile.Exists(LFile) then
+      Exit;
+    try
+      TFile.Delete(LFile);
+      Status('Removed %s', [AName]);
+    except
+      on E: Exception do
+      begin
+        Result := False;
+        Status('Clean failed for %s: %s', [AName, E.Message]);
+      end;
+    end;
+  end;
+
+begin
+  Result := True;
+
+  if not Assigned(FBuildConfig) then
+    Exit;
+
+  LRoot := FBuildConfig.GetString('build.output_path', '');
+  LRoot := LRoot.Trim();
+  if LRoot = '' then
+  begin
+    Status('Nothing to clean: no recorded build output');
+    Exit;
+  end;
+
+  LRoot := TPath.GetFullPath(LRoot);
+
+  // Hard gate: only a verified Myra build folder is ever touched.
+  if not IsMyraOutputFolder(LRoot) then
+  begin
+    Status('Nothing to clean: %s is not a Myra build folder', [LRoot]);
+    Exit;
+  end;
+
+  Status('Cleaning %s', [LRoot]);
+  DoRemoveDir('generated');
+  DoRemoveDir('zig-out');
+  DoRemoveDir('.zig-cache');
+  DoRemoveFile('build.zig');
 end;
 
 // Post-build resources

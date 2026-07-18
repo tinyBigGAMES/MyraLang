@@ -12,6 +12,16 @@
 /* PLATFORMS: WINMSVC64 */
 /* ALLOW_WARNINGS */
 
+/* EXPECT:
+source: 1280x640, 3 channels
+gray:   1280x640, 1 channel
+wrote myra_gray.png, exists: true
+file size: 53131
+*/
+// NOTE: "file size: 53131" is the exact PNG byte count from this OpenCV/libpng
+// build. It is deterministic here but may drift if the OpenCV binaries (and thus
+// the PNG encoder) change -- update the EXPECT if that happens.
+
 module exe test_exe_opencv;
 
 @target winmsvc64;
@@ -19,7 +29,8 @@ module exe test_exe_opencv;
 @modulepath "res/libs/vendor/opencv";
 
 import
-  opencv_import;
+  opencv_import,
+  Files;
 
 var
   LSrc: Mat;
@@ -28,7 +39,14 @@ begin
   LSrc := imread("../../../res/assets/images/myra.jpg", IMREAD_COLOR);
 
   if not LSrc.empty() then
+    println("source: {}x{}, {} channels", LSrc.cols, LSrc.rows, LSrc.channels());
+
     cvtColor(LSrc, LGray, COLOR_BGR2GRAY);
+    println("gray:   {}x{}, {} channel", LGray.cols, LGray.rows, LGray.channels());
+
     imwrite("../../../myra_gray.png", LGray);
+
+    println("wrote myra_gray.png, exists: {}", Files.FileExists("../../../myra_gray.png"));
+    println("file size: {}", Files.GetFileSize("../../../myra_gray.png"));
   end;
 end.
